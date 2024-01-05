@@ -14,6 +14,7 @@ class cnn_model(L.LightningModule):
          loss_fn = nn.CrossEntropyLoss()
          ):
         super().__init__()
+        self.save_hyperparameters(ignore=['loss_fn'])
         self.learning_rate = learning_rate
         self.loss_fn  = loss_fn
         

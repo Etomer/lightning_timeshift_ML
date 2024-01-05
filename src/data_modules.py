@@ -65,7 +65,8 @@ class MovingImpulseResponseDataModule(L.LightningDataModule):
         n_mics_per_batch = 17,
         max_shift : float = 500, #samples
         n_shift_bins : int = 500,
-        validation_percentage = 0.05
+        validation_percentage = 0.05,
+        transform = None
         ):
         super().__init__()
         self.data_path = data_path
@@ -85,6 +86,7 @@ class MovingImpulseResponseDataModule(L.LightningDataModule):
 
         # Find sound files
         self.sound_files = glob.glob(sound_dir + "*.wav")
+        self.transform = transform
 
     def prepare_data(self):
         pass
@@ -165,6 +167,7 @@ class MovingImpulseResponseDataModule(L.LightningDataModule):
     def my_collate_fn(self,batch):
         batch = torch.stack([b[0] for b in batch],dim=0),torch.stack([b[1] for b in batch],dim=0)
         batch = self.batch_to_paired_fft_format(batch)
+        batch = self.transform(batch)
         return batch
 
 
