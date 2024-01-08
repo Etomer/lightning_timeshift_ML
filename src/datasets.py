@@ -79,6 +79,7 @@ def generate_moving_impulse_response_dataset(
     room_max_size : float = 10.0, # meter
     sound_source_locations : int = 10,
     sound_source_max_move : float = 1.0, # meter
+    directivity : bool = False, # makes speakers and microphones be directional
     ):
     """
     simulate dataset with moving sound source,
@@ -101,23 +102,46 @@ def generate_moving_impulse_response_dataset(
             # randomly generate a rectangular cuboid
             x,y,z = (room_max_size - room_min_size)*np.random.rand(3) + room_min_size
             corners = np.array([[0,0], [0,y], [x,y], [x,0]]).T 
-            room = pra.Room.from_corners(corners, fs=fs, max_order=2, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=True, air_absorption=True)
-            room.extrude(z, materials=pra.Material(reflection_coeff, scatter_coeff))
-            room.set_ray_tracing(receiver_radius=0.2, n_rays=10000, energy_thres=1e-5)
+            if directivity:
+                room = pra.ShoeBox([x,y,z], fs=fs, max_order=2, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=False, air_absorption=True)
+            else:
+                room = pra.Room.from_corners(corners, fs=fs, max_order=2, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=True, air_absorption=True)
+                room.set_ray_tracing(receiver_radius=0.2, n_rays=10000, energy_thres=1e-5)
+                room.extrude(z, materials=pra.Material(reflection_coeff, scatter_coeff))
 
             #add sender and receivers to room
             random_point_in_room = lambda : np.random.rand(3)*[x,y,z]
             sender_position_start = random_point_in_room()
             sender_position_end = random_point_in_room()
+            
+            
             if np.linalg.norm(sender_position_start - sender_position_end) > sound_source_max_move:
                 sender_position_end = sender_position_start + sound_source_max_move*(sender_position_end - sender_position_start)/np.linalg.norm(sender_position_start - sender_position_end)
             
             
             for i in range(sound_source_locations):
-                room.add_source(sender_position_end*i/(sound_source_locations-1) + sender_position_start*(sound_source_locations - i - 1)/(sound_source_locations-1))
+                if directivity:
+                    dir_obj = pra.directivities.CardioidFamily(
+                    orientation=pra.directivities.DirectionVector(azimuth=np.random.rand()*360, colatitude=180*np.random.rand(), degrees=True),
+                    pattern_enum=pra.directivities.DirectivityPattern.HYPERCARDIOID,
+                    )
+                    room.add_source(sender_position_end*i/(sound_source_locations-1) + sender_position_start*(sound_source_locations - i - 1)/(sound_source_locations-1),directivity=dir_obj)
+                else:
+                    room.add_source(sender_position_end*i/(sound_source_locations-1) + sender_position_start*(sound_source_locations - i - 1)/(sound_source_locations-1))
+            
             sender_position_mid = (sender_position_start + sender_position_end)/2
             R = np.array(np.stack([random_point_in_room() for i in range(n_mics)]).T)
-            room.add_microphone(R)
+            if directivity:
+                dir_objs = []
+                for _ in range(n_mics):
+                    dir_objs.append(pra.directivities.CardioidFamily(
+                    orientation=pra.directivities.DirectionVector(azimuth=np.random.rand()*360, colatitude=180*np.random.rand(), degrees=True),
+                    pattern_enum=pra.directivities.DirectivityPattern.HYPERCARDIOID,
+                    ))
+                room.add_microphone(R,directivity=dir_objs)
+            else:
+                room.add_microphone(R)
+
             
             # compute image sources for reflections
             room.image_source_model()
