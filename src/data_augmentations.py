@@ -11,6 +11,8 @@ class doppler_aug(object):
         factor = (2*self.max_rel_v*torch.rand(1) + 343 - self.max_rel_v)/343
 
         freqs = X.shape[-1]
+        if factor == 1: # nan prevention maybe?
+            factor += 1e-5
         if factor < 1:
             x = torch.arange(freqs)*factor
             w_lower = 1 - (x - x.int())
