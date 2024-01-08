@@ -5,19 +5,19 @@ from multiprocessing import Pool
 
 
 # Setiing ----------------------------
-dataset_name = "moving_dataset_medium.hdf5" # with .hdf5 at the end
+dataset_name = "moving_dataset_directivity_medium.hdf5" # with .hdf5 at the end
 target_path = os.path.join(".","data","datasets", dataset_name)
 n_cores = 8
 # specify arguments in the inner function bellow
 def generator(target_path_part):
-    generate_moving_impulse_response_dataset(target_path_part, n_rooms=400)
+    generate_moving_impulse_response_dataset(target_path_part, n_rooms=400, directivity=True)
 #generator = lambda target_path_part : generate_moving_impulse_response_dataset(target_path_part, n_rooms=1)
 # -------------------------------
 
 
 if __name__ == "__main__":
     if n_cores == 1:
-        generator()
+        generator(target_path)
     else:
         piece_paths = [target_path[:-5] + "_piece_" + str(i) + ".hdf5" for i in range(n_cores)]
         with Pool(n_cores) as p:

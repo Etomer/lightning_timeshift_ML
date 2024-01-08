@@ -6,7 +6,7 @@ __pycache__/*
 datasets/*
 data/*
 runs/*
-
+*.ckpt
 old_models/*
 
 # wandb data-folder
