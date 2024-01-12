@@ -67,7 +67,7 @@ class MovingImpulseResponseDataModule(L.LightningDataModule):
         n_shift_bins : int = 500,
         validation_percentage = 0.05,
         transform = None,
-        data_val_path : str = None,
+        data_val_path : str = None, # if you want to use a different dataset as validation set
         ):
         super().__init__()
         self.data_path = data_path
