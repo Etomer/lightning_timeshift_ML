@@ -103,9 +103,9 @@ def generate_moving_impulse_response_dataset(
             x,y,z = (room_max_size - room_min_size)*np.random.rand(3) + room_min_size
             corners = np.array([[0,0], [0,y], [x,y], [x,0]]).T 
             if directivity:
-                room = pra.ShoeBox([x,y,z], fs=fs, max_order=2, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=False, air_absorption=True)
+                room = pra.ShoeBox([x,y,z], fs=fs, max_order=3, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=False, air_absorption=True)
             else:
-                room = pra.Room.from_corners(corners, fs=fs, max_order=2, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=True, air_absorption=True)
+                room = pra.Room.from_corners(corners, fs=fs, max_order=3, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=True, air_absorption=True)
                 room.set_ray_tracing(receiver_radius=0.2, n_rays=10000, energy_thres=1e-5)
                 room.extrude(z, materials=pra.Material(reflection_coeff, scatter_coeff))
 
