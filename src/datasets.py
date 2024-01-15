@@ -72,7 +72,7 @@ def generate_moving_impulse_response_dataset(
     n_rooms : int = 200,
     n_mics : int = 51,
     rir_len : int = 1600,
-    reflection_coeff : float = 0.5,
+    reflection_coeff : float = 0.5, # max reflective coeff
     scatter_coeff : float = 0.15,
     fs : float= 16000, # Hz
     room_min_size : float = 1.0, # meter
@@ -99,15 +99,23 @@ def generate_moving_impulse_response_dataset(
         Y = hdf5_file.create_dataset("gt", (n_rooms,n_mics), dtype="f")
         
         for room_i in range(n_rooms):
+            
+            if room_i % (n_rooms // 10) == 0:
+                print(str(room_i) + " / " + str(n_rooms))
+
+            local_reflection_coeff = float(np.random.rand(1)*(1-reflection_coeff) + reflection_coeff)
+            local_scatter_coeff = float(np.random.rand(1)*(1-scatter_coeff) + scatter_coeff)
+            
+
             # randomly generate a rectangular cuboid
             x,y,z = (room_max_size - room_min_size)*np.random.rand(3) + room_min_size
             corners = np.array([[0,0], [0,y], [x,y], [x,0]]).T 
             if directivity:
-                room = pra.ShoeBox([x,y,z], fs=fs, max_order=3, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=False, air_absorption=True)
+                room = pra.ShoeBox([x,y,z], fs=fs, max_order=3, materials=pra.Material(local_reflection_coeff, local_scatter_coeff), ray_tracing=False, air_absorption=True)
             else:
-                room = pra.Room.from_corners(corners, fs=fs, max_order=3, materials=pra.Material(reflection_coeff, scatter_coeff), ray_tracing=True, air_absorption=True)
+                room = pra.Room.from_corners(corners, fs=fs, max_order=3, materials=pra.Material(local_reflection_coeff, local_scatter_coeff), ray_tracing=True, air_absorption=True)
                 room.set_ray_tracing(receiver_radius=0.2, n_rays=10000, energy_thres=1e-5)
-                room.extrude(z, materials=pra.Material(reflection_coeff, scatter_coeff))
+                room.extrude(z, materials=pra.Material(local_reflection_coeff, local_scatter_coeff))
 
             #add sender and receivers to room
             random_point_in_room = lambda : np.random.rand(3)*[x,y,z]

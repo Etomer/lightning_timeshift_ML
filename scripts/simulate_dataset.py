@@ -5,12 +5,12 @@ from multiprocessing import Pool
 
 
 # Setiing ----------------------------
-dataset_name = "moving_dataset_directivity_easy_tiny_val.hdf5" # with .hdf5 at the end
+dataset_name = "moving_dataset_directivity.hdf5" # with .hdf5 at the end
 target_path = os.path.join(".","data","datasets", dataset_name)
 n_cores = 8
 # specify arguments in the inner function bellow
 def generator(target_path_part):
-    generate_moving_impulse_response_dataset(target_path_part, n_rooms=8, directivity=True,reflection_coeff=0.3)
+    generate_moving_impulse_response_dataset(target_path_part, n_rooms=1500, directivity=True,reflection_coeff=0.1)
 #generator = lambda target_path_part : generate_moving_impulse_response_dataset(target_path_part, n_rooms=1)
 # -------------------------------
 
